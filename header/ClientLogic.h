@@ -8,6 +8,7 @@
 
 #pragma once
 #include "protocol.h"
+#include <boost/crc.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -25,12 +26,13 @@ public:
 
 	struct Client
 	{
-		ClientID     id;
-		std::string   username;
-		PublicKey    publicKey;
-		bool          publicKeySet = false;
-		SymmetricKey symmetricKey;
-		bool          symmetricKeySet = false;
+		ClientID		id;
+		std::string		username;
+		PublicKey		publicKey;
+		bool			publicKeySet = false;
+		AESKey			symmetricKey;
+		bool			symmetricKeySet = false;
+		bool			validCRC = false;
 	};
 
 
@@ -45,22 +47,33 @@ public:
 	// inline getters
 	std::string getLastError() const { return _lastError.str(); }
 	std::string getSelfUsername() const { return _self.username; }
-	ClientID   getSelfClientID() const { return _self.id; }
 
 	// client logic to be invoked by client menu.
 	bool parseServeInfo();
-	bool parseClientInfo();
+	bool parseFileName(std::string& fileName);
+	bool parseRegisteredClientInfo();
+	bool parseUnregisteredClientInfo(std::string& username);
 	bool registerClient(const std::string& username);
+	bool generateRSAPair();
+	bool changeRSAPair();
+	bool sendPublicKey();
+	bool sendFile(bool& sent);
 
+	uint32_t getCRC(const std::string& str);
+
+	bool isRSAGenerated();
+	bool isSymmetricKeySet();
+	bool informServerCRCValidated(uint8_t* fileName);
+	bool isCRCValid();
+	void informServerCRCFailed(const size_t size);
 
 private:
 	void clearLastError();
 	bool storeClientInfo();
-	bool validateHeader(const ResponseHeader& header, const EResponseCode expectedCode);
-	bool receiveUnknownPayload(const uint8_t* const request, const size_t reqSize, const EResponseCode expectedCode, uint8_t*& payload, size_t& size);
-	//bool setClientSymmetricKey(const ClientID& clientID, const SymmetricKey& symmetricKey);
+	bool storeClientRSA();
+	bool validateHeader(const ResponseHeader& header, const ResponseCode expectedCode);
 
-	Client              _self;           // self symmetric key invalid.
+	Client              _self;           
 	std::stringstream    _lastError;
 	FileHandler* _fileHandler;
 	SocketHandler* _socketHandler;

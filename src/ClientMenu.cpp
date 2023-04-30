@@ -2,9 +2,9 @@
  * Encrypted File Transfer Client
  * @file ClientMenu.cpp
  * @brief Interface class for user input. Handle user's requests.
- * can be replaced by GUI class and invoke CClientLogic correspondingly.
  * @author Arthur Rennert
  */
+
 #include "pch.h"
 #include "ClientMenu.h"
 #include <iostream>
@@ -29,8 +29,8 @@ void ClientMenu::initialize()
 	{
 		clientStop(_clientLogic.getLastError());
 	}
-	_registered = _clientLogic.parseClientInfo();
-
+	_registered = _clientLogic.parseRegisteredClientInfo();
+	_rsaGenerated = _clientLogic.isRSAGenerated();
 }
 
 /**
@@ -40,16 +40,14 @@ void ClientMenu::display() const
 {
 	clear();
 	if (_registered && !_clientLogic.getSelfUsername().empty())
-		std::cout << "Hello " << _clientLogic.getSelfUsername() << ", ";
+		std::cout << "Hello " << _clientLogic.getSelfUsername() << "\n";
 	std::cout << "*** Encrypted File Transfer ***\n\nChoose an option from the menu below:" << std::endl << std::endl;
 	for (const auto& opt : _menuOptions)
 		std::cout << opt << std::endl;
 }
 
-
 /**
  * Read input from console.
- * Do not allow empty lines.
  */
 std::string ClientMenu::readUserInput(const std::string& description) const
 {
@@ -65,7 +63,6 @@ std::string ClientMenu::readUserInput(const std::string& description) const
 
 	return input;
 }
-
 
 /**
  * Read & Validate user's input according to main menu options.
@@ -83,7 +80,6 @@ bool ClientMenu::getMenuOption(MenuOption& menuOption) const
 	menuOption = *it;
 	return true;
 }
-
 
 /**
  * Invoke matching function to user's choice. User's choice is validated.
@@ -109,37 +105,89 @@ void ClientMenu::handleUserChoice()
 	// Main selection switch
 	switch (menuOption.getValue())
 	{
-	case MenuOption::EOption::MENU_EXIT:
-	{
-		std::cout << "Client will now exit." << std::endl;
-		pause();
-		exit(0);
-	}
-	case MenuOption::EOption::MENU_REGISTER:
-	{
-		if (_registered)
+		case MenuOption::EOption::MENU_EXIT:
 		{
-			std::cout << _clientLogic.getSelfUsername() << ", you have already registered!" << std::endl;
-			return;
+			std::cout << "Client will now exit." << std::endl;
+			pause();
+			exit(0);
 		}
-		const std::string username = readUserInput("Please type your username..");
-		success = _clientLogic.registerClient(username);
-		_registered = success;
-		break;
-	}
-	//case MenuOption::EOption::MENU_SEND_PUBLIC_KEY:
-	//{
-	//	const std::string username = readUserInput("Please type a username..");
-	//	success = _clientLogic.requestClientPublicKey(username);
-	//	break;
-	//}
-	//case MenuOption::EOption::MENU_SEND_FILE:
-	//{
-	//	const std::string username = readUserInput("Please type a username to send file to..");
-	//	const std::string message = readUserInput("Enter filepath: ");
-	//	success = _clientLogic.sendMessage(username, MSG_FILE, message);
-	//	break;
-	//}
+		case MenuOption::EOption::MENU_REGISTER:
+		{
+			if (_registered)
+			{
+				std::cout << _clientLogic.getSelfUsername() << ", you have already registered!" << std::endl;
+				return;
+			}
+
+			std::string username;
+
+			if (_clientLogic.parseUnregisteredClientInfo(username))
+			{
+				success = _clientLogic.registerClient(username);
+				_registered = success;
+			}
+			break;
+		}
+
+		case MenuOption::EOption::MENU_GENERATE_RSA_PAIR:
+		{
+			if (_rsaGenerated)
+			{
+				std::cout << _clientLogic.getSelfUsername() << ", you have already generated RSA pair!" << std::endl;
+				return;
+			}
+			success = _clientLogic.generateRSAPair();
+			_rsaGenerated = success;
+			break;
+		}
+
+		case MenuOption::EOption::MENU_CHANGE_RSA_PAIR:
+		{
+			if (!_rsaGenerated)
+			{
+				std::cout << _clientLogic.getSelfUsername() << ", you didn't generate RSA key pair before!" << std::endl;
+				return;
+			}
+			success = _clientLogic.changeRSAPair();
+			_rsaGenerated = success;
+			break;
+		}
+
+		case MenuOption::EOption::MENU_SEND_PUBLIC_KEY:
+		{
+			if (!_rsaGenerated)
+			{
+				std::cout << _clientLogic.getSelfUsername() << ", you have to generate RSA key pair first!" << std::endl;
+				return;
+			}
+			success = _clientLogic.sendPublicKey();
+			break;
+		}
+		case MenuOption::EOption::MENU_SEND_ENCRYPTED_FILE:
+		{
+			if (!_clientLogic.isSymmetricKeySet())
+			{
+				std::cout << _clientLogic.getSelfUsername() << ", you didn't get a Symmetric key from the server yet!\
+					\nPlease send your public key to the server in order to get a Symmetric key from the server." << std::endl;
+				return;
+			}
+
+			size_t counter = MAX_FILE_RESEND_RETRIES;
+			bool sent = false;
+			success = _clientLogic.sendFile(sent);
+			while (sent && !_clientLogic.isCRCValid())
+			{
+				_clientLogic.informServerCRCFailed(counter);
+				if (counter == 0)
+				{
+					break;
+				}
+				std::cout << "CRC validation with server failed. Retrying " << counter << " more times." << std::endl;
+				success = _clientLogic.sendFile(sent);
+				counter--;
+			}
+			break;
+		}
 	}
 
 	std::cout << (success ? menuOption.getSuccessString() : _clientLogic.getLastError()) << std::endl;

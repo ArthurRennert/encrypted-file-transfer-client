@@ -2,7 +2,6 @@
  * Encrypted File Transfer Client
  * @file ClientMenu.h
  * @brief Interface class for user input. Handle user's requests.
- * can be replaced by GUI class and invoke CClientLogic correspondingly.
  * @author Arthur Rennert
  */
 
@@ -14,7 +13,7 @@
 class ClientMenu
 {
 public:
-	ClientMenu() : _registered(false) {}
+	ClientMenu() : _registered(false), _rsaGenerated(false) {}
 	void initialize();
 	void display() const;
 	void handleUserChoice();
@@ -30,18 +29,17 @@ private:
 		enum class EOption
 		{
 			MENU_REGISTER = 1,
-			MENU_SEND_PUBLIC_KEY = 2,
-			MENU_SEND_FILE = 3,
-			MENU_REQ_CRC_VALID = 4,
-			MENU_REQ_CRC_NOT_VALID = 5,
-			MENU_REQ_CRC_NOT_VALID_FOURTH_TIME = 6,
+			MENU_GENERATE_RSA_PAIR = 2,
+			MENU_CHANGE_RSA_PAIR = 3,
+			MENU_SEND_PUBLIC_KEY = 4,
+			MENU_SEND_ENCRYPTED_FILE = 5,
 			MENU_EXIT = 0
 		};
 
 	private:
 		EOption     _value;
 		bool        _registration;  // indicates whether registration is required before option usage.
-		std::string _description;
+		std::string _description;	
 		std::string _success;       // success description
 
 	public:
@@ -66,14 +64,14 @@ private:
 
 
 	ClientLogic                   _clientLogic;
-	bool                           _registered;
+	bool                          _registered;
+	bool						  _rsaGenerated;
 	const std::vector<MenuOption> _menuOptions{
 		{ MenuOption::EOption::MENU_REGISTER,						false, "Register",                         "Successfully registered on server."},
-		{ MenuOption::EOption::MENU_SEND_PUBLIC_KEY,				true,  "Send public key",				   "Public key was sent successfully."},
-		{ MenuOption::EOption::MENU_SEND_FILE,						true,  "Send file",                      "File was sent successfully."},
-		{ MenuOption::EOption::MENU_REQ_CRC_VALID,					true,  "Send CRC valid",				   ""},
-		{ MenuOption::EOption::MENU_REQ_CRC_NOT_VALID,				true,  "Send CRC not valid",               "Message was sent successfully."},
-		{ MenuOption::EOption::MENU_REQ_CRC_NOT_VALID_FOURTH_TIME,	true,  "Send CRC not valid fourth time",   "Symmetric key request was sent successfully."},
+		{ MenuOption::EOption::MENU_GENERATE_RSA_PAIR,				true,  "Generata RSA Pair",				   "RSA pair has been successfully generated."},
+		{ MenuOption::EOption::MENU_CHANGE_RSA_PAIR,				true,  "Change RSA Pair",				   "RSA pair has been successfully changed."},
+		{ MenuOption::EOption::MENU_SEND_PUBLIC_KEY,				true,  "Send public key",                  "Public key was sent successfully."},
+		{ MenuOption::EOption::MENU_SEND_ENCRYPTED_FILE,            true,  "Send encrypted file",              "Encrypted file was sent successfully. CRC validated with Server."},
 		{ MenuOption::EOption::MENU_EXIT,							false, "Exit client",                      ""}
 	};
 };

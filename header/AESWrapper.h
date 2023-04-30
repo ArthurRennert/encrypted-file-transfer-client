@@ -1,24 +1,32 @@
+/**
+ * Encrypted File Transfer Client
+ * @file AESWrapper.h
+ * @brief Handle symmetric encryption.
+ * @author Arthur Rennert
+ */
+
 #pragma once
-
 #include <string>
-
+#include "protocol.h"
 
 class AESWrapper
 {
 public:
-	static const unsigned int DEFAULT_KEYLENGTH = 16;
-private:
-	unsigned char _key[DEFAULT_KEYLENGTH];
-	AESWrapper(const AESWrapper& aes);
-public:
-	static unsigned char* GenerateKey(unsigned char* buffer, unsigned int length);
+	static void GenerateKey(uint8_t* const buffer, const size_t length);
 
 	AESWrapper();
-	AESWrapper(const unsigned char* key, unsigned int size);
-	~AESWrapper();
+	AESWrapper(const AESKey& symKey);
 
-	const unsigned char* getKey() const;
+	virtual ~AESWrapper() = default;
+	AESWrapper(const AESWrapper& other) = delete;
+	AESWrapper(AESWrapper&& other) noexcept = delete;
+	AESWrapper& operator=(const AESWrapper& other) = delete;
+	AESWrapper& operator=(AESWrapper&& other) noexcept = delete;
 
-	std::string encrypt(const char* plain, unsigned int length);
-	std::string decrypt(const char* cipher, unsigned int length);
+	AESKey getKey() const { return _key; }
+
+	std::string encrypt(const uint8_t* plain, size_t length) const;
+
+private:
+	AESKey _key;
 };

@@ -1,15 +1,18 @@
 /**
- * MessageU Client
+ * Encrypted File Transfer Client
  * @file Stringer.cpp
  * @brief Stringer class handles string manipulations using different libraries.
- * https://github.com/Romansko/MessageU/blob/main/client/src/Stringer.cpp
+ * @author Arthur Rennert
  */
+
 #include "pch.h"
 #include "Stringer.h"
 #include <base64.h>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <chrono>
+
+const std::string Stringer::BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 std::string Stringer::encodeBase64(const std::string& str)
 {
@@ -34,7 +37,6 @@ std::string Stringer::decodeBase64(const std::string& str)
 
 	return decoded;
 }
-
 
 /**
  * Try to convert bytes to hex string representation.
@@ -82,13 +84,3 @@ void Stringer::trim(std::string& stringToTrim)
 {
 	boost::algorithm::trim(stringToTrim);
 }
-
-/**
- * Return current timestamp as sting.
- */
-std::string Stringer::getTimestamp()
-{
-	const auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-	return std::to_string(now.count());
-}
-

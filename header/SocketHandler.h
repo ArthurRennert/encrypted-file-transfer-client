@@ -1,10 +1,10 @@
 /**
- * MessageU Client
+ * Encrypted File Transfer Client
  * @file SocketHandler.h
  * @brief Handle sending and receiving from a socket.
- * @author Roman Koifman
- * https://github.com/Romansko/MessageU/blob/main/client/header/SocketHandler.h
+ * @author Arthur Rennert
  */
+
 #pragma once
 #include <string>
 #include <cstdint>
@@ -14,7 +14,7 @@
 using boost::asio::ip::tcp;
 using boost::asio::io_context;
 
-constexpr size_t PACKET_SIZE = 1024;   // Better be the same on server side.
+constexpr size_t PACKET_SIZE = 1024;   // The same on server side.
 
 class SocketHandler
 {
@@ -48,17 +48,16 @@ public:
 	bool receive(uint8_t* const buffer, const size_t size) const;
 	bool send(const uint8_t* const buffer, const size_t size) const;
 	bool sendReceive(const uint8_t* const toSend, const size_t size, uint8_t* const response, const size_t resSize);
-
+	bool sendOnly(const uint8_t* const toSend, const size_t size);
 
 private:
-	std::string    _address;
-	std::string    _port;
-	io_context* _ioContext;
-	tcp::resolver* _resolver;
-	tcp::socket* _socket;
-	bool           _bigEndian;
-	bool           _connected;  // indicates that socket has been open and connected.
+	std::string     _address;
+	std::string     _port;
+	io_context*		_ioContext;
+	tcp::resolver*  _resolver;
+	tcp::socket*	_socket;
+	bool		    _bigEndian;
+	bool            _connected;  // indicates that socket is open and connected.
 
 	void swapBytes(uint8_t* const buffer, size_t size) const;
-
 };

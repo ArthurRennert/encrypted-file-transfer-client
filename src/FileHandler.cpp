@@ -7,7 +7,6 @@
 
 #include "pch.h"
 #include "FileHandler.h"
-
 #include <algorithm>
 #include <fstream>
 #include <boost/filesystem.hpp>  // for create_directories
@@ -21,7 +20,6 @@ FileHandler::~FileHandler()
 {
 	close();
 }
-
 
 /**
  * Open a file for read/write. Create folders in filepath if do not exist.
@@ -53,6 +51,35 @@ bool FileHandler::open(const std::string& filepath, bool write)
 	return _open;
 }
 
+
+/**
+ * Open a file for write (append). Create folders in filepath if do not exist.
+ * Relative paths not supported!
+ */
+bool FileHandler::openToAppend(const std::string& filepath)
+{
+	if (filepath.empty())
+		return false;
+
+	try
+	{
+		close(); // close and clear current fstream before allocating new one.
+		_fileStream = new std::fstream;
+		// create directories within the path if they are do not exist.
+		const auto parent = boost::filesystem::path(filepath).parent_path();
+		if (!parent.empty())
+		{
+			(void)create_directories(parent);
+		}
+		_fileStream->open(filepath, std::ios::out | std::ios::app);
+		_open = _fileStream->is_open();
+	}
+	catch (...)
+	{
+		_open = false;
+	}
+	return _open;
+}
 
 /**
  * Close file stream.
@@ -91,7 +118,6 @@ bool FileHandler::read(uint8_t* const dest, const size_t bytes) const
 	}
 }
 
-
 /**
  * Write given bytes from src to fs.
  */
@@ -109,23 +135,6 @@ bool FileHandler::write(const uint8_t* const src, const size_t bytes) const
 		return false;
 	}
 }
-
-
-/**
- * Removes a file given a filePath.
- */
-bool FileHandler::remove(const std::string& filePath) const
-{
-	try
-	{
-		return (0 == std::remove(filePath.c_str()));   // 0 upon success..
-	}
-	catch (...)
-	{
-		return false;
-	}
-}
-
 
 /**
  * Read a single line from fs to line.
@@ -147,7 +156,7 @@ bool FileHandler::readLine(std::string& line) const
 }
 
 /**
- * Write a single string and append an end line character.
+ * Write a single line and append an end line character.
  */
 bool FileHandler::writeLine(const std::string& line) const
 {
@@ -155,7 +164,6 @@ bool FileHandler::writeLine(const std::string& line) const
 	newline.append("\n");
 	return write(reinterpret_cast<const uint8_t*>(newline.c_str()), newline.size());  // write without null termination.
 }
-
 
 /**
  * Calculate the file size which is opened by fs.
@@ -201,25 +209,4 @@ bool FileHandler::readAtOnce(const std::string& filepath, uint8_t*& file, size_t
 	}
 	close();
 	return success;
-}
-
-/**
- * Open and write data to file.
- */
-bool FileHandler::writeAtOnce(const std::string& filepath, const std::string& data)
-{
-	if (data.empty() || !open(filepath, true))
-		return false;
-
-	const bool success = write(reinterpret_cast<const uint8_t* const>(data.c_str()), data.size());
-	close();
-	return success;
-}
-
-/**
- * Returns absolute path to %TMP% folder.
- */
-std::string FileHandler::getTempFolder() const
-{
-	return boost::filesystem::temp_directory_path().string();
 }

@@ -1,14 +1,17 @@
 /**
- * MessageU Client
+ * Encrypted File Transfer Client
  * @file Stringer.h
  * @brief Stringer class handles string manipulations using different libraries.
- * https://github.com/Romansko/MessageU/blob/main/client/header/Stringer.h
+ * @author Arthur Rennert
  */
+
 #pragma once
 #include <string>
 
 class Stringer
 {
+	static const std::string BASE64_CHARS;
+
 public:
 	static std::string encodeBase64(const std::string& str);
 	static std::string decodeBase64(const std::string& str);
@@ -17,6 +20,4 @@ public:
 	static std::string unhex(const std::string& hexString);
 
 	static void trim(std::string& stringToTrim);
-
-	static std::string getTimestamp();
 };

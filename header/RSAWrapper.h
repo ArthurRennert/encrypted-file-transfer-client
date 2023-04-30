@@ -1,61 +1,60 @@
-#pragma once
+/**
+ * Encrypted File Transfer Client
+ * @file RSAWrapper.h
+ * @brief Handle asymmetric encryption.
+ * @author Arthur Rennert
+ */
 
+#pragma once
 #include <osrng.h>
 #include <rsa.h>
-
 #include <string>
+#include "protocol.h"
 
 
+static constexpr size_t BITS = 1024;
 
 class RSAPublicWrapper
 {
+
 public:
-	static const unsigned int KEYSIZE = 160;
-	static const unsigned int BITS = 1024;
+	static constexpr size_t KEYSIZE = PUBLIC_KEY_SIZE;
 
 private:
 	CryptoPP::AutoSeededRandomPool _rng;
-	CryptoPP::RSA::PublicKey _publicKey;
+	CryptoPP::RSA::PublicKey       _publicKey;
 
-	RSAPublicWrapper(const RSAPublicWrapper& rsapublic);
-	RSAPublicWrapper& operator=(const RSAPublicWrapper& rsapublic);
 public:
+	RSAPublicWrapper(const PublicKey& publicKey);
 
-	RSAPublicWrapper(const char* key, unsigned int length);
-	RSAPublicWrapper(const std::string& key);
-	~RSAPublicWrapper();
-
-	std::string getPublicKey() const;
-	char* getPublicKey(char* keyout, unsigned int length) const;
-
-	std::string encrypt(const std::string& plain);
-	std::string encrypt(const char* plain, unsigned int length);
+	virtual ~RSAPublicWrapper() = default;
+	RSAPublicWrapper(const RSAPublicWrapper& other) = delete;
+	RSAPublicWrapper(RSAPublicWrapper&& other) noexcept = delete;
+	RSAPublicWrapper& operator=(const RSAPublicWrapper& other) = delete;
+	RSAPublicWrapper& operator=(RSAPublicWrapper&& other) noexcept = delete;
 };
 
 
 class RSAPrivateWrapper
 {
-public:
-	static const unsigned int BITS = 1024;
 
 private:
 	CryptoPP::AutoSeededRandomPool _rng;
-	CryptoPP::RSA::PrivateKey _privateKey;
+	CryptoPP::RSA::PrivateKey      _privateKey;
 
-	RSAPrivateWrapper(const RSAPrivateWrapper& rsaprivate);
-	RSAPrivateWrapper& operator=(const RSAPrivateWrapper& rsaprivate);
+
 public:
 	RSAPrivateWrapper();
-	RSAPrivateWrapper(const char* key, unsigned int length);
 	RSAPrivateWrapper(const std::string& key);
-	~RSAPrivateWrapper();
+
+	virtual ~RSAPrivateWrapper() = default;
+	RSAPrivateWrapper(const RSAPrivateWrapper& other) = delete;
+	RSAPrivateWrapper(RSAPrivateWrapper&& other) noexcept = delete;
+	RSAPrivateWrapper& operator=(const RSAPrivateWrapper& other) = delete;
+	RSAPrivateWrapper& operator=(RSAPrivateWrapper&& other) noexcept = delete;
 
 	std::string getPrivateKey() const;
-	char* getPrivateKey(char* keyout, unsigned int length) const;
-
 	std::string getPublicKey() const;
-	char* getPublicKey(char* keyout, unsigned int length) const;
 
-	std::string decrypt(const std::string& cipher);
-	std::string decrypt(const char* cipher, unsigned int length);
+	std::string decrypt(const uint8_t* cipher, size_t length);
 };

@@ -1,14 +1,14 @@
 /**
- * MessageU Client
+ * Encrypted File Transfer Client
  * @file SocketHandler.cpp
  * @brief Handle sending and receiving from a socket.
- * @author Roman Koifman
- * https://github.com/Romansko/MessageU/blob/main/client/src/SocketHandler.cpp
+ * @author Arthur Rennert
  */
 
 #include "pch.h"
 #include "SocketHandler.h"
 #include <boost/asio.hpp>
+#include <iostream>
 
 using boost::asio::ip::tcp;
 using boost::asio::io_context;
@@ -40,7 +40,6 @@ bool SocketHandler::setSocketInfo(const std::string& address, const std::string&
 	return true;
 }
 
-
 /**
  * Try parse IP Address. Return false if failed.
  * Handle special cases of "localhost", "LOCALHOST"
@@ -62,7 +61,6 @@ bool SocketHandler::isValidAddress(const std::string& address)
 
 /**
  * Try to parse a port number from a string.
- * Return false if failed.
  */
 bool SocketHandler::isValidPort(const std::string& port)
 {
@@ -121,7 +119,6 @@ void SocketHandler::close()
 	_connected = false;
 }
 
-
 /**
  * Receive size bytes from _socket to buffer.
  * Return false if unable to receive expected size bytes.
@@ -129,7 +126,9 @@ void SocketHandler::close()
 bool SocketHandler::receive(uint8_t* const buffer, const size_t size) const
 {
 	if (_socket == nullptr || !_connected || buffer == nullptr || size == 0)
+	{
 		return false;
+	}
 
 	size_t bytesLeft = size;
 	uint8_t* ptr = buffer;
@@ -137,10 +136,11 @@ bool SocketHandler::receive(uint8_t* const buffer, const size_t size) const
 	{
 		uint8_t tempBuffer[PACKET_SIZE] = { 0 };
 		boost::system::error_code errorCode; // read() will not throw exception when error_code is passed as argument.
-
 		size_t bytesRead = read(*_socket, boost::asio::buffer(tempBuffer, PACKET_SIZE), errorCode);
 		if (bytesRead == 0)
+		{
 			return false;     // Error. Failed receiving and shouldn't use buffer.
+		}
 
 		if (_bigEndian)  // It's required to convert from little endian to big endian.
 		{
@@ -152,7 +152,6 @@ bool SocketHandler::receive(uint8_t* const buffer, const size_t size) const
 		ptr += bytesToCopy;
 		bytesLeft = (bytesLeft < bytesToCopy) ? 0 : (bytesLeft - bytesToCopy);  // unsigned protection.
 	}
-
 	return true;
 }
 
@@ -215,6 +214,25 @@ bool SocketHandler::sendReceive(const uint8_t* const toSend, const size_t size, 
 }
 
 /**
+ * Wrap connect, send and close functions.
+ * Inner function have validations. Hence, this function does not validate arguments.
+ */
+bool SocketHandler::sendOnly(const uint8_t* const toSend, const size_t size)
+{
+	if (!connect())
+	{
+		return false;
+	}
+	if (!send(toSend, size))
+	{
+		close();
+		return false;
+	}
+	close();
+	return true;
+}
+
+/**
  * Handle Endianness.
  */
 void SocketHandler::swapBytes(uint8_t* const buffer, size_t size) const
@@ -229,8 +247,4 @@ void SocketHandler::swapBytes(uint8_t* const buffer, size_t size) const
 		const uint32_t tmp = ((buffer[i] << 8) & 0xFF00FF00) | ((buffer[i] >> 8) & 0xFF00FF);
 		buffer[i] = (tmp << 16) | (tmp >> 16);
 	}
-
 }
-
-
-
