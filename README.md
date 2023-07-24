@@ -17,7 +17,7 @@ Configuration:
 Both libraries Boost & Crypto++ are statically built in this guide.
 
 
-1. Boost 1.81.0 Installation & Configuration
+Boost 1.81.0 Installation & Configuration
 
 Boost 1.81.0 Installation Instructions are based on Pattarapol Koosalapeerom's Boost Installation Instructions.
 
