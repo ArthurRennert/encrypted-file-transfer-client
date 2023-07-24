@@ -3,6 +3,7 @@
 The client encrypts a file and sends it to the Server to keep (server decrypts it) it in it's DB.
 
 Developed with Visual Studio 2022.
+
 Code written with ISO C++20 Standard.
 Boost Library 1.81.0 is used. https://www.boost.org
 Crypto++ Library 8.7 is used. https://www.cryptopp.com
