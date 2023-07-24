@@ -1,6 +1,6 @@
 # encrypted-file-transfer-client
 
-The client encrypts a file and sends it to the Server to keep it in it's DB.
+The client encrypts a file and sends it to the Server to keep (server decrypts it) it in it's DB.
 
 Developed with Visual Studio 2022.
 Code written with ISO C++20 Standard.
